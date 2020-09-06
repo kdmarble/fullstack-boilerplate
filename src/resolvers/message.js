@@ -1,58 +1,40 @@
-import { v4 as uuidv4 } from "uuid";
-
 export default {
   Query: {
-    messages: (parent, args, { models }) => {
-      return Object.values(models.messages);
+    messages: async (parent, args, { db }) => {
+      return await db.message.findAll();
     },
-    message: (parent, { id }, { models }) => {
-      return models.messages[id];
+    message: async (parent, { id }, { db }) => {
+      return await db.message.findByPk(id);
     }
   },
 
   Mutation: {
-    createMessage: (parent, { text }, { me, models }) => {
-      const id = uuidv4();
-      const message = {
-        id,
+    createMessage: async (parent, { text }, { me, db }) => {
+      return await db.message.create({
         text,
         userId: me.id
-      };
-
-      models.messages[id] = message;
-      models.users[me.id].messageIds.push(id);
-
-      return message;
+      });
     },
 
-    deleteMessage: (parent, { id }, { models }) => {
-      const { [id]: message, ...otherMessages } = models.messages;
-
-      if (!message) {
-        return false;
-      }
-
-      models.messages = otherMessages;
-
-      return true;
+    deleteMessage: async (parent, { id }, { db }) => {
+      return await db.message.destroy({ where: { id } });
     },
 
-    updateMessage: (parent, { id, text }, { me, models }) => {
-      let message = Object.values(models.messages).filter(
-        message => message.id === id
+    updateMessage: async (parent, { id, text }, { db }) => {
+      return await db.message.update(
+        { text: text },
+        {
+          where: {
+            userId: id
+          }
+        }
       );
-
-      message.id = id;
-      message.text = text;
-      message.userId = me.id;
-
-      return message;
     }
   },
 
   Message: {
-    user: (message, args, { models }) => {
-      return models.users[message.userId];
+    user: async (message, args, { db }) => {
+      return await db.user.findByPk(message.userId);
     }
   }
 };

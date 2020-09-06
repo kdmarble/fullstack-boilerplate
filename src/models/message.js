@@ -1,4 +1,4 @@
-export const message = (sequelize, DataTypes) => {
+const message = (sequelize, DataTypes) => {
   // Define message table with column names message
   // that's type string
   const Message = sequelize.define("message", {
@@ -9,8 +9,10 @@ export const message = (sequelize, DataTypes) => {
 
   // Each message belongs to a user
   Message.associate = models => {
-    Message.belongsTo(models.User);
+    Message.belongsTo(models.user);
   };
 
   return Message;
 };
+
+export default message;
