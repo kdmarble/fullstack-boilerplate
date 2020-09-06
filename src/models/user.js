@@ -1,3 +1,5 @@
+import bcrypt from "bcrypt";
+
 const user = (sequelize, DataTypes) => {
   // Define table named user, with a column named
   // username that's type string
@@ -11,6 +13,32 @@ const user = (sequelize, DataTypes) => {
           args: true,
           msg: "Username cannot be empty"
         }
+      }
+    },
+    email: {
+      type: DataTypes.STRING,
+      unique: true,
+      allowNull: false,
+      validate: {
+        notEmpty: {
+          args: true,
+          msg: "Email cannot be empty"
+        },
+        isEmail: {
+          args: true,
+          msg: "Not a valid email"
+        }
+      }
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notEmpty: {
+          args: true,
+          msg: "Password cannot be empty"
+        },
+        len: [7, 42]
       }
     }
   });
@@ -32,6 +60,19 @@ const user = (sequelize, DataTypes) => {
     }
 
     return user;
+  };
+
+  User.beforeCreate(async user => {
+    user.password = await user.generatePasswordHash();
+  });
+
+  User.prototype.generatePasswordHash = async function() {
+    const saltRounds = 10;
+    return await bcrypt.hash(this.password, saltRounds);
+  };
+
+  User.prototype.validatePassword = async function(password) {
+    return await bcrypt.compare(password, this.password);
   };
 
   return User;

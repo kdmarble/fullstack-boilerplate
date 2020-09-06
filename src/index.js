@@ -31,7 +31,8 @@ const server = new ApolloServer({
       const me = await db.user.findByLogin("keith");
       return {
         db,
-        me
+        me,
+        secret: process.env.SECRET
       };
     }
   }
@@ -60,6 +61,8 @@ const createUsersWithMessages = async () => {
   await db.user.create(
     {
       username: "keith",
+      email: "hello@keith.com",
+      password: "testtest",
       messages: [
         {
           text: "Message one"
@@ -74,6 +77,8 @@ const createUsersWithMessages = async () => {
   await db.user.create(
     {
       username: "Marble",
+      email: "hello@marble.com",
+      password: "testtest",
       messages: [
         {
           text: "message two"
