@@ -13,6 +13,16 @@ app.use(cors());
 const server = new ApolloServer({
   typeDefs: schema,
   resolvers,
+  formatError: error => {
+    const message = error.message
+      .replace("SequelizeValidationError: ", "")
+      .replace("Validation error: ", "");
+
+    return {
+      ...error,
+      message
+    };
+  },
   context: async ({ req, connection }) => {
     if (connection) {
       return { db };

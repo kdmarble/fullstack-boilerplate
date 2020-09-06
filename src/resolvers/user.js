@@ -7,6 +7,9 @@ export default {
       return await db.user.findByPk(id);
     },
     me: async (parent, args, { db, me }) => {
+      if (!me) {
+        return null;
+      }
       return await db.user.findByPk(me.id);
     }
   },

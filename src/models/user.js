@@ -3,7 +3,15 @@ const user = (sequelize, DataTypes) => {
   // username that's type string
   const User = sequelize.define("user", {
     username: {
-      type: DataTypes.STRING
+      type: DataTypes.STRING,
+      unique: true,
+      allowNull: false,
+      validate: {
+        notEmpty: {
+          args: true,
+          msg: "Username cannot be empty"
+        }
+      }
     }
   });
 

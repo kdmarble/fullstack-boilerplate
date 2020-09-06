@@ -17,11 +17,15 @@ const sequelize = new Sequelize(
   }
 );
 
+// Reads the contents of the directory
 fs.readdirSync(path.join(__dirname))
+  // Filters to get appropriately named js files
   .filter(
     file =>
       file.indexOf(".") !== 0 && file !== basename && file.slice(-3) === ".js"
   )
+  // For each file, associate each model with the exports of each file
+  // Append to db object
   .forEach(file => {
     const model = require(path.join(__dirname, file)).default(
       sequelize,
@@ -30,6 +34,7 @@ fs.readdirSync(path.join(__dirname))
     db[model.name] = model;
   });
 
+// Associate each model with each other and expose to application
 Object.keys(db).forEach(key => {
   if (db[key].associate) {
     db[key].associate(db);
