@@ -2,6 +2,7 @@ import "dotenv/config";
 import cors from "cors";
 import express from "express";
 import jwt from "jsonwebtoken";
+import http from "http";
 import { ApolloServer, AuthenticationError } from "apollo-server-express";
 
 import schema from "./schema";
@@ -57,6 +58,9 @@ server.applyMiddleware({
   path: "/graphql"
 });
 
+const httpServer = http.createServer(app);
+server.installSubscriptionHandlers(httpServer);
+
 // Used to seed DB w/ sample data on start
 const eraseDatabaseOnSync = true;
 
@@ -65,7 +69,7 @@ sequelize.sync({ force: eraseDatabaseOnSync }).then(async () => {
     createUsersWithMessages(new Date());
   }
 
-  app.listen({ port: 8000 }, () => {
+  httpServer.listen({ port: 8000 }, () => {
     console.log("Apollo Server on http://localhost:8000/graphql");
   });
 });
