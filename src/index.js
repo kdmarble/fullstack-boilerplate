@@ -1,7 +1,8 @@
 import "dotenv/config";
 import cors from "cors";
 import express from "express";
-import { ApolloServer } from "apollo-server-express";
+import jwt from "jsonwebtoken";
+import { ApolloServer, AuthenticationError } from "apollo-server-express";
 
 import schema from "./schema";
 import resolvers from "./resolvers";
@@ -9,6 +10,19 @@ import db, { sequelize } from "./models";
 
 const app = express();
 app.use(cors());
+
+// Used to verify the token sent via http header
+const getMe = async req => {
+  const token = req.headers["x-token"];
+
+  if (token) {
+    try {
+      return await jwt.verify(token, process.env.SECRET);
+    } catch (e) {
+      throw new AuthenticationError("Your session expired. Sign in again");
+    }
+  }
+};
 
 const server = new ApolloServer({
   typeDefs: schema,
@@ -28,7 +42,7 @@ const server = new ApolloServer({
       return { db };
     }
     if (req) {
-      const me = await db.user.findByLogin("keith");
+      const me = await getMe(req);
       return {
         db,
         me,
@@ -63,6 +77,7 @@ const createUsersWithMessages = async () => {
       username: "keith",
       email: "hello@keith.com",
       password: "testtest",
+      role: "ADMIN",
       messages: [
         {
           text: "Message one"

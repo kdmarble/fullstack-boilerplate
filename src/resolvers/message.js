@@ -1,3 +1,6 @@
+import { combineResolvers } from "graphql-resolvers";
+import { isAuthenticated, isMessageOwner } from "./authorization";
+
 export default {
   Query: {
     messages: async (parent, args, { db }) => {
@@ -9,39 +12,50 @@ export default {
   },
 
   Mutation: {
-    createMessage: async (parent, { text }, { me, db }) => {
-      try {
-        return await db.message.create({
-          text,
-          userId: me.id
-        });
-      } catch (error) {
-        throw new Error("Error creating message");
+    createMessage: combineResolvers(
+      isAuthenticated,
+      async (parent, { text }, { me, db }) => {
+        try {
+          return await db.message.create({
+            text,
+            userId: me.id
+          });
+        } catch (error) {
+          throw new Error("Error creating message");
+        }
       }
-    },
+    ),
 
-    deleteMessage: async (parent, { id }, { db }) => {
-      try {
-        return await db.message.destroy({ where: { id } });
-      } catch (error) {
-        throw new Error("Error deleting message");
+    deleteMessage: combineResolvers(
+      isAuthenticated,
+      isMessageOwner,
+      async (parent, { id }, { db }) => {
+        try {
+          return await db.message.destroy({ where: { id } });
+        } catch (error) {
+          throw new Error("Error deleting message");
+        }
       }
-    },
+    ),
 
-    updateMessage: async (parent, { id, text }, { db }) => {
-      try {
-        return await db.message.update(
-          { text: text },
-          {
-            where: {
-              userId: id
+    updateMessage: combineResolvers(
+      isAuthenticated,
+      isMessageOwner,
+      async (parent, { id, text }, { db }) => {
+        try {
+          return await db.message.update(
+            { text: text },
+            {
+              where: {
+                userId: id
+              }
             }
-          }
-        );
-      } catch (error) {
-        throw new Error("Error updating message");
+          );
+        } catch (error) {
+          throw new Error("Error updating message");
+        }
       }
-    }
+    )
   },
 
   Message: {
