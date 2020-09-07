@@ -62,10 +62,10 @@ const httpServer = http.createServer(app);
 server.installSubscriptionHandlers(httpServer);
 
 // Used to seed DB w/ sample data on start
-const eraseDatabaseOnSync = true;
+const isTest = !!process.env.TEST_DATABASE;
 
-sequelize.sync({ force: eraseDatabaseOnSync }).then(async () => {
-  if (eraseDatabaseOnSync) {
+sequelize.sync({ force: isTest }).then(async () => {
+  if (isTest) {
     createUsersWithMessages(new Date());
   }
 
@@ -99,6 +99,7 @@ const createUsersWithMessages = async date => {
       username: "Marble",
       email: "hello@marble.com",
       password: "testtest",
+      role: "USER",
       messages: [
         {
           text: "message two",
