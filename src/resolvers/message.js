@@ -99,8 +99,8 @@ export default {
   },
 
   Message: {
-    user: async (message, args, { db }) => {
-      return await db.user.findByPk(message.userId);
+    user: async (message, args, { loaders }) => {
+      return await loaders.user.load(message.userId);
     }
   },
 
