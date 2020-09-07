@@ -7,15 +7,21 @@ const basename = path.basename(__filename);
 
 const db = {};
 
-const sequelize = new Sequelize(
-  process.env.TEST_DATABASE || process.env.DATABASE,
-  process.env.DATABASE_USER,
-  process.env.DATABASE_PASSWORD,
-  {
-    dialect: "postgres",
-    logging: false
-  }
-);
+let sequelize;
+if (process.env.DATABASE_URL) {
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: "postgres"
+  });
+} else {
+  sequelize = new Sequelize(
+    process.env.TEST_DATABASE || process.env.DATABASE,
+    process.env.DATABASE_USER,
+    process.env.DATABASE_PASSWORD,
+    {
+      dialect: "postgres"
+    }
+  );
+}
 
 // Reads the contents of the directory
 fs.readdirSync(path.join(__dirname))

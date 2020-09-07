@@ -28,6 +28,8 @@ const getMe = async req => {
 };
 
 const server = new ApolloServer({
+  introspection: true,
+  playground: true,
   typeDefs: schema,
   resolvers,
   formatError: error => {
@@ -73,13 +75,15 @@ server.installSubscriptionHandlers(httpServer);
 
 // Used to seed DB w/ sample data on start
 const isTest = !!process.env.TEST_DATABASE;
+const isProduction = !!process.env.DATABASE_URL;
+const port = process.env.PORT || 8000;
 
-sequelize.sync({ force: isTest }).then(async () => {
-  if (isTest) {
+sequelize.sync({ force: isTest || isProduction }).then(async () => {
+  if (isTest || isProduction) {
     createUsersWithMessages(new Date());
   }
 
-  httpServer.listen({ port: 8000 }, () => {
+  httpServer.listen({ port }, () => {
     console.log("Apollo Server on http://localhost:8000/graphql");
   });
 });
