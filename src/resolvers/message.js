@@ -3,8 +3,18 @@ import { isAuthenticated, isMessageOwner } from "./authorization";
 
 export default {
   Query: {
-    messages: async (parent, args, { db }) => {
-      return await db.message.findAll();
+    messages: async (parent, { cursor, limit = 100 }, { db }) => {
+      return await db.message.findAll({
+        order: [["createdAt", "DESC"]],
+        limit,
+        where: cursor
+          ? {
+              createdAt: {
+                [Sequelize.Op.lt]: cursor
+              }
+            }
+          : null
+      });
     },
     message: async (parent, { id }, { db }) => {
       return await db.message.findByPk(id);
