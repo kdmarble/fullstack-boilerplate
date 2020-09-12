@@ -48,19 +48,24 @@ export default {
   Mutation: {
     createMessage: combineResolvers(
       isAuthenticated,
-      async (parent, { text }, { db, me }) => {
+      async (parent, { text, senderMail, receiverMail }, { db, me }) => {
         try {
           const message = await db.message.create({
             text,
+            senderMail,
+            receiverMail,
             userId: me.id
           });
 
           pubsub.publish(EVENTS.MESSAGE.CREATED, {
-            messageCreated: { message }
+            messageCreated: {
+              message
+            }
           });
 
           return message;
         } catch (error) {
+          console.log(error);
           throw new Error("Error creating message");
         }
       }

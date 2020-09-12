@@ -1,7 +1,13 @@
 import jwt from "jsonwebtoken";
 import { combineResolvers } from "graphql-resolvers";
-import { UserInputError, AuthenticationError } from "apollo-server";
+import {
+  UserInputError,
+  AuthenticationError,
+  PubSub,
+  withFilter
+} from "apollo-server";
 import { isAdmin } from "./authorization";
+import pubsub, { EVENTS } from "../subscription";
 
 const createToken = async (user, secret, expiresIn) => {
   const { id, email, username, role } = user;
@@ -34,6 +40,12 @@ export default {
         password
       });
 
+      pubsub.publish(EVENTS.USER.CREATED, {
+        newUser: {
+          user
+        }
+      });
+
       return { token: createToken(user, secret, "30m") };
     },
     signIn: async (parent, { login, password }, { db, secret }) => {
@@ -52,10 +64,28 @@ export default {
       return { token: createToken(user, secret, "30m") };
     },
     deleteUser: combineResolvers(isAdmin, async (parent, { id }, { db }) => {
-      return await db.user.destroy({
+      const user = await db.user.findByPk(id);
+      const userDeleted = await db.user.destroy({
         where: { id }
       });
-    })
+
+      pubsub.publish(EVENTS.USER.DELETED, {
+        userDeleted: {
+          user
+        }
+      });
+
+      return userDeleted;
+    }),
+    userTyping: async (parent, { senderMail, receiverMail }, { db }) => {
+      pubsub.publish(EVENTS.USER.TYPING, {
+        userTyping: {
+          senderMail,
+          receiverMail
+        }
+      });
+      return true;
+    }
   },
 
   User: {
@@ -65,6 +95,23 @@ export default {
           userId: user.id
         }
       });
+    }
+  },
+
+  Subscription: {
+    userTyping: {
+      subscribe: withFilter(
+        () => pubsub.asyncIterator(EVENTS.USER.TYPING),
+        (payload, variables) => {
+          return payload.receiverMail === variables.receiverMail;
+        }
+      )
+    },
+    newUser: {
+      subscribe: () => pubsub.asyncIterator(EVENTS.USER.CREATED)
+    },
+    userDeleted: {
+      subscribe: () => pubsub.asyncIterator(EVENTS.USER.DELETED)
     }
   }
 };

@@ -74,14 +74,14 @@ const httpServer = http.createServer(app);
 server.installSubscriptionHandlers(httpServer);
 
 // Used to seed DB w/ sample data on start
-// const isTest = !!process.env.TEST_DATABASE;
-// const isProduction = !!process.env.DATABASE_URL;
+const isTest = !!process.env.TEST_DATABASE;
+const isProduction = !!process.env.DATABASE_URL;
 const port = process.env.PORT || 8000;
 
-sequelize.sync().then(async () => {
-  // if (isTest || isProduction) {
-  //   createUsersWithMessages(new Date());
-  // }
+sequelize.sync({ force: isTest || isProduction }).then(async () => {
+  if (isTest || isProduction) {
+    createUsersWithMessages(new Date());
+  }
 
   httpServer.listen({ port }, () => {
     console.log("Apollo Server on http://localhost:8000/graphql");
@@ -89,44 +89,50 @@ sequelize.sync().then(async () => {
 });
 
 // Used to seed DB w/ sample data on start
-// const createUsersWithMessages = async date => {
-//   await db.user.create(
-//     {
-//       username: "keith",
-//       email: "hello@keith.com",
-//       password: "testtest",
-//       role: "ADMIN",
-//       messages: [
-//         {
-//           text: "Message one",
-//           createdAt: date.setSeconds(date.getSeconds() + 1)
-//         }
-//       ]
-//     },
-//     {
-//       include: [db.message]
-//     }
-//   );
+const createUsersWithMessages = async date => {
+  await db.user.create(
+    {
+      username: "keith",
+      email: "hello@keith.com",
+      password: "testtest",
+      role: "ADMIN",
+      messages: [
+        {
+          text: "Message one",
+          senderMail: "hello@keith.com",
+          receiverMail: "hello@marble.com",
+          createdAt: date.setSeconds(date.getSeconds() + 1)
+        }
+      ]
+    },
+    {
+      include: [db.message]
+    }
+  );
 
-//   await db.user.create(
-//     {
-//       username: "Marble",
-//       email: "hello@marble.com",
-//       password: "testtest",
-//       role: "USER",
-//       messages: [
-//         {
-//           text: "message two",
-//           createdAt: date.setSeconds(date.getSeconds() + 1)
-//         },
-//         {
-//           text: "Hello world",
-//           createdAt: date.setSeconds(date.getSeconds() + 1)
-//         }
-//       ]
-//     },
-//     {
-//       include: [db.message]
-//     }
-//   );
-// };
+  await db.user.create(
+    {
+      username: "Marble",
+      email: "hello@marble.com",
+      password: "testtest",
+      role: "USER",
+      messages: [
+        {
+          text: "message two",
+          senderMail: "hello@marble.com",
+          receiverMail: "hello@keith.com",
+          createdAt: date.setSeconds(date.getSeconds() + 1)
+        },
+        {
+          text: "Hello world",
+          senderMail: "hello@marble.com",
+          receiverMail: "hello@keith.com",
+          createdAt: date.setSeconds(date.getSeconds() + 1)
+        }
+      ]
+    },
+    {
+      include: [db.message]
+    }
+  );
+};

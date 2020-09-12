@@ -42,7 +42,8 @@ const user = (sequelize, DataTypes) => {
       }
     },
     role: {
-      type: DataTypes.STRING
+      type: DataTypes.STRING,
+      defaultValue: "USER"
     }
   });
 

@@ -10,6 +10,24 @@ const message = (sequelize, DataTypes) => {
           msg: "A message must have a text"
         }
       }
+    },
+    senderMail: {
+      type: DataTypes.STRING,
+      validate: {
+        notEmpty: {
+          args: true,
+          msg: "A message must have a sender"
+        }
+      }
+    },
+    receiverMail: {
+      type: DataTypes.STRING,
+      validate: {
+        notEmpty: {
+          args: true,
+          msg: "A message must have a recipient"
+        }
+      }
     }
   });
 
