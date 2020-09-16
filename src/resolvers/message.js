@@ -2,6 +2,7 @@ import { combineResolvers } from "graphql-resolvers";
 import { isAuthenticated, isMessageOwner } from "./authorization";
 import Sequelize from "sequelize";
 import pubsub, { EVENTS } from "../subscription";
+import { withFilter } from "apollo-server";
 
 const toCursorHash = string => Buffer.from(string).toString("base64");
 
@@ -100,7 +101,16 @@ export default {
           throw new Error("Error updating message");
         }
       }
-    )
+    ),
+    userTyping: async (parent, { senderMail, receiverMail }, { db }) => {
+      pubsub.publish(EVENTS.USER.TYPING, {
+        userTyping: {
+          senderMail,
+          receiverMail
+        }
+      });
+      return true;
+    }
   },
 
   Message: {
@@ -111,7 +121,20 @@ export default {
 
   Subscription: {
     messageCreated: {
-      subscribe: () => pubsub.asyncIterator(EVENTS.MESSAGE.CREATED)
+      subscribe: withFilter(
+        () => pubsub.asyncIterator(EVENTS.MESSAGE.CREATED),
+        (payload, variables) => {
+          return payload.receiverMail === variables.receiverMail;
+        }
+      )
+    },
+    userTyping: {
+      subscribe: withFilter(
+        () => pubsub.asyncIterator(EVENTS.USER.TYPING),
+        (payload, variables) => {
+          return payload.receiverMail === variables.receiverMail;
+        }
+      )
     }
   }
 };

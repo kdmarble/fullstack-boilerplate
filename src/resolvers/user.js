@@ -63,10 +63,12 @@ export default {
 
       return { token: createToken(user, secret, "30m") };
     },
-    deleteUser: combineResolvers(isAdmin, async (parent, { id }, { db }) => {
-      const user = await db.user.findByPk(id);
+    deleteUser: combineResolvers(isAdmin, async (parent, { email }, { db }) => {
+      const user = await db.user.find({
+        where: { email }
+      });
       const userDeleted = await db.user.destroy({
-        where: { id }
+        where: { email }
       });
 
       pubsub.publish(EVENTS.USER.DELETED, {
@@ -76,16 +78,7 @@ export default {
       });
 
       return userDeleted;
-    }),
-    userTyping: async (parent, { senderMail, receiverMail }, { db }) => {
-      pubsub.publish(EVENTS.USER.TYPING, {
-        userTyping: {
-          senderMail,
-          receiverMail
-        }
-      });
-      return true;
-    }
+    })
   },
 
   User: {
@@ -99,14 +92,6 @@ export default {
   },
 
   Subscription: {
-    userTyping: {
-      subscribe: withFilter(
-        () => pubsub.asyncIterator(EVENTS.USER.TYPING),
-        (payload, variables) => {
-          return payload.receiverMail === variables.receiverMail;
-        }
-      )
-    },
     newUser: {
       subscribe: () => pubsub.asyncIterator(EVENTS.USER.CREATED)
     },

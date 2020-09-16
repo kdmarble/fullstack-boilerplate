@@ -14,6 +14,7 @@ export default gql`
     ): Message!
     deleteMessage(id: ID!): Boolean!
     updateMessage(id: ID!, text: String!): Message!
+    userTyping(email: String!, receiverMail: String!): Boolean!
   }
 
   type MessageConnection {
@@ -36,10 +37,7 @@ export default gql`
   }
 
   extend type Subscription {
-    messageCreated: MessageCreated!
-  }
-
-  type MessageCreated {
-    message: Message!
+    userTyping(receiverMail: String!): String
+    messageCreated(receiverMail: String!): Message
   }
 `;
