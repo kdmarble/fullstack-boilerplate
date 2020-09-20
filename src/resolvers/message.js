@@ -24,7 +24,7 @@ export default {
 
       // Retrieve one more message than defined in the limit
       const messages = await db.message.findAll({
-        order: [["createdAt", "DESC"]],
+        order: [["createdAt", "ASC"]],
         limit: limit + 1,
         ...cursorOptions
       });
