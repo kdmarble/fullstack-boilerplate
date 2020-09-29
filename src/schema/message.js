@@ -37,7 +37,7 @@ export default gql`
   }
 
   extend type Subscription {
-    userTyping(receiverMail: String!): String
-    messageCreated(receiverMail: String!): Message
+    userTyping(receiverMail: String!): String!
+    messageCreated(receiverMail: String!): Message!
   }
 `;

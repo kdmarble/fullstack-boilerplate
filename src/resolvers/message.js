@@ -1,8 +1,13 @@
 import { combineResolvers } from "graphql-resolvers";
 import { isAuthenticated, isMessageOwner } from "./authorization";
 import Sequelize from "sequelize";
-import pubsub, { EVENTS } from "../subscription";
+// import pubsub, { EVENTS } from "../subscription";
+import { PubSub } from "apollo-server";
 import { withFilter } from "apollo-server";
+
+const pubsub = new PubSub();
+const MESSAGE_CREATED = "MESSAGE_CREATED";
+const USER_TYPING = "USER_TYPING";
 
 const toCursorHash = string => Buffer.from(string).toString("base64");
 
@@ -58,10 +63,8 @@ export default {
             userId: me.id
           });
 
-          pubsub.publish(EVENTS.MESSAGE.CREATED, {
-            messageCreated: {
-              message
-            }
+          pubsub.publish(MESSAGE_CREATED, {
+            messageCreated: message
           });
 
           return message;
@@ -103,7 +106,7 @@ export default {
       }
     ),
     userTyping: async (parent, { senderMail, receiverMail }, { db }) => {
-      pubsub.publish(EVENTS.USER.TYPING, {
+      pubsub.publish(USER_TYPING, {
         userTyping: {
           senderMail,
           receiverMail
@@ -122,17 +125,17 @@ export default {
   Subscription: {
     messageCreated: {
       subscribe: withFilter(
-        () => pubsub.asyncIterator(EVENTS.MESSAGE.CREATED),
+        () => pubsub.asyncIterator(MESSAGE_CREATED),
         (payload, variables) => {
-          return payload.receiverMail === variables.receiverMail;
+          return payload.messageCreated.receiverMail === variables.receiverMail;
         }
       )
     },
     userTyping: {
       subscribe: withFilter(
-        () => pubsub.asyncIterator(EVENTS.USER.TYPING),
+        () => pubsub.asyncIterator(USER_TYPING),
         (payload, variables) => {
-          return payload.receiverMail === variables.receiverMail;
+          return payload.userTyping.receiverMail === variables.receiverMail;
         }
       )
     }
